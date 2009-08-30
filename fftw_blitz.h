@@ -6,6 +6,17 @@
 #include <blitz/tinyvec-et.h>
 #include <boost/utility.hpp>
 
+#if FFTWBLITZ_MT
+	#include <boost/thread/mutex.hpp>
+	// FFTW's memory allocation is not thread-safe
+	// http://www.fftw.org/fftw3_doc/Thread-safety.html
+	extern boost::mutex fftw_alloc_mutex;
+	#define LOCK_FFTW_ALLOC_MUTEX() boost::mutex::scoped_lock \
+		fftw_alloc_lock(fftw_alloc_mutex)
+#else
+	#define LOCK_FFTW_ALLOC_MUTEX() do{}while(0)
+#endif
+
 namespace fftwblitz {
 	// these are defined for convenience and to ease the possibility
 	// of using something other than blitz in the future (such as uBLAS)

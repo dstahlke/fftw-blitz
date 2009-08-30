@@ -2,6 +2,10 @@ CFLAGS_O = -g -DBZ_DEBUG -O0
 #CFLAGS_O = -g -O3
 CXXFLAGS = -Wall -I. `pkg-config blitz fftw3 --cflags` $(CFLAGS_O)
 LIBRARIES = `pkg-config blitz fftw3 --libs`
+
+#CXXFLAGS += -DFFTWBLITZ_MT=1
+#LIBRARIES += -lboost_thread-mt
+
 EXEC = demo
 
 OBJECTS = fftw_blitz.o demo.o
