@@ -2,9 +2,20 @@
 #define FFTW_BLITZ_H
 
 #include <fftw3.h>
+#include <blitz/array.h>
+#include <blitz/tinyvec-et.h>
 #include <boost/utility.hpp>
 
-#include "common.h"
+namespace fftwblitz {
+	// these are defined for convenience and to ease the possibility
+	// of using something other than blitz in the future (such as uBLAS)
+	typedef blitz::Array<double, 1> real1d;
+	typedef blitz::Array<std::complex<double>, 1> cplx1d;
+	typedef blitz::TinyVector<int, 1> shape1d;
+	typedef blitz::Array<double, 2> real2d;
+	typedef blitz::Array<std::complex<double>, 2> cplx2d;
+	typedef blitz::TinyVector<int, 2> shape2d;
+}
 
 class FFTW_R2C_2D : public boost::noncopyable {
 	double *spatial;
@@ -12,20 +23,23 @@ class FFTW_R2C_2D : public boost::noncopyable {
 	fftw_plan plan;
 	// these are pointers so we can construct them in the
 	// body of our constructor
-	grid_t *spatial_view;
-	grid_cplx_t *freq_view;
+	fftwblitz::real2d *spatial_view;
+	fftwblitz::cplx2d *freq_view;
+
+	void init(int size_y, int size_x, unsigned int flags);
 
 public:
-	FFTW_R2C_2D(yx_t size);
+	FFTW_R2C_2D(fftwblitz::shape2d size, unsigned int flags=FFTW_ESTIMATE);
+	FFTW_R2C_2D(int size_y, int size_x, unsigned int flags=FFTW_ESTIMATE);
 
 	~FFTW_R2C_2D();
 
-	grid_t &input();
-	grid_cplx_t &output();
+	fftwblitz::real2d &input();
+	fftwblitz::cplx2d &output();
 	void execute();
 
 	template <class T> // template here allows usage of blitz expressions
-	inline grid_cplx_t forward(T in) {
+	inline fftwblitz::cplx2d forward(T in) {
 		input() = in;
 		execute();
 		return output();
@@ -38,20 +52,81 @@ class FFTW_C2R_2D : public boost::noncopyable {
 	fftw_plan plan;
 	// these are pointers so we can construct them in the
 	// body of our constructor
-	grid_t *spatial_view;
-	grid_cplx_t *freq_view;
+	fftwblitz::real2d *spatial_view;
+	fftwblitz::cplx2d *freq_view;
+
+	void init(int size_y, int size_x);
 
 public:
-	FFTW_C2R_2D(yx_t size);
+	FFTW_C2R_2D(fftwblitz::shape2d size);
+	FFTW_C2R_2D(int size_y, int size_x);
 
 	~FFTW_C2R_2D();
 
-	grid_cplx_t &input();
-	grid_t &output();
+	fftwblitz::cplx2d &input();
+	fftwblitz::real2d &output();
 	void execute();
 
 	template <class T> // template here allows usage of blitz expressions
-	inline grid_t inverse(T in) {
+	inline fftwblitz::real2d inverse(T in) {
+		input() = in;
+		execute();
+		return output();
+	}
+};
+
+class FFTW_R2C_1D : public boost::noncopyable {
+	double *spatial;
+	fftw_complex *freq;
+	fftw_plan plan;
+	// these are pointers so we can construct them in the
+	// body of our constructor
+	fftwblitz::real1d *spatial_view;
+	fftwblitz::cplx1d *freq_view;
+
+	void init(int size_x);
+
+public:
+	FFTW_R2C_1D(fftwblitz::shape1d size);
+	FFTW_R2C_1D(int size_x);
+
+	~FFTW_R2C_1D();
+
+	fftwblitz::real1d &input();
+	fftwblitz::cplx1d &output();
+	void execute();
+
+	template <class T> // template here allows usage of blitz expressions
+	inline fftwblitz::cplx1d forward(T in) {
+		input() = in;
+		execute();
+		return output();
+	}
+};
+
+class FFTW_C2R_1D : public boost::noncopyable {
+	double *spatial;
+	fftw_complex *freq;
+	fftw_plan plan;
+	// these are pointers so we can construct them in the
+	// body of our constructor
+	fftwblitz::real1d *spatial_view;
+	fftwblitz::cplx1d *freq_view;
+
+	void init(int size_x);
+
+public:
+	FFTW_C2R_1D(fftwblitz::shape1d size);
+	FFTW_C2R_1D(int size_x);
+
+	~FFTW_C2R_1D();
+
+	fftwblitz::cplx1d &input();
+	fftwblitz::real1d &output();
+	void execute();
+
+	template <class T> // template here allows usage of blitz expressions
+	inline fftwblitz::real1d inverse(T in) {
 		input() = in;
 		execute();
 		return output();
