@@ -10,25 +10,25 @@ FFTW_R2C_2D::FFTW_R2C_2D(fftwblitz::shape2d size, unsigned int flags) {
 	init(size[0], size[1], flags);
 }
 
-FFTW_R2C_2D::FFTW_R2C_2D(int size_y, int size_x, unsigned int flags) {
-	init(size_y, size_x, flags);
+FFTW_R2C_2D::FFTW_R2C_2D(int size0, int size1, unsigned int flags) {
+	init(size0, size1, flags);
 }
 
-void FFTW_R2C_2D::init(int size_y, int size_x, unsigned int flags) {
+void FFTW_R2C_2D::init(int size0, int size1, unsigned int flags) {
 	acquire_fftw_mutex();
-	spatial = (double *)fftw_malloc(sizeof(double) * size_y * size_x);
-	freq = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * size_y * (size_x/2+1));
-	plan = fftw_plan_dft_r2c_2d(size_y, size_x, spatial, freq, flags);
+	spatial = (double *)fftw_malloc(sizeof(double) * size0 * size1);
+	freq = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * size0 * (size1/2+1));
+	plan = fftw_plan_dft_r2c_2d(size0, size1, spatial, freq, flags);
 	release_fftw_mutex();
 
 	spatial_view = new fftwblitz::real2d(
-		spatial, blitz::shape(size_y, size_x), blitz::neverDeleteData);
+		spatial, blitz::shape(size0, size1), blitz::neverDeleteData);
 	// Supposedly std::complex is always compatible with fftw's 
 	// custom complex type (which is double[2])
 	// http://www.fftw.org/doc/Complex-numbers.html
 	freq_view = new fftwblitz::cplx2d(
 		reinterpret_cast<std::complex<double> *>(freq), 
-		blitz::shape(size_y, (size_x/2+1)), blitz::neverDeleteData);
+		blitz::shape(size0, (size1/2+1)), blitz::neverDeleteData);
 }
 
 FFTW_R2C_2D::~FFTW_R2C_2D() {
@@ -55,25 +55,29 @@ void FFTW_R2C_2D::execute() {
 
 ///// FFTW_C2R_2D /////
 
-FFTW_C2R_2D::FFTW_C2R_2D(fftwblitz::shape2d size) {
-	init(size[0], size[1]);
+FFTW_C2R_2D::FFTW_C2R_2D(fftwblitz::shape2d size, unsigned int flags) {
+	init(size[0], size[1], flags);
 }
 
-void FFTW_C2R_2D::init(int size_y, int size_x) {
+FFTW_C2R_2D::FFTW_C2R_2D(int size0, int size1, unsigned int flags) {
+	init(size0, size1, flags);
+}
+
+void FFTW_C2R_2D::init(int size0, int size1, unsigned int flags) {
 	acquire_fftw_mutex();
-	spatial = (double *)fftw_malloc(sizeof(double) * size_y * size_x);
-	freq = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * size_y * (size_x/2+1));
-	plan = fftw_plan_dft_c2r_2d(size_y, size_x, freq, spatial, FFTW_ESTIMATE);
+	spatial = (double *)fftw_malloc(sizeof(double) * size0 * size1);
+	freq = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * size0 * (size1/2+1));
+	plan = fftw_plan_dft_c2r_2d(size0, size1, freq, spatial, flags);
 	release_fftw_mutex();
 
 	spatial_view = new fftwblitz::real2d(
-		spatial, blitz::shape(size_y, size_x), blitz::neverDeleteData);
+		spatial, blitz::shape(size0, size1), blitz::neverDeleteData);
 	// Supposedly std::complex is always compatible with fftw's 
 	// custom complex type (which is double[2])
 	// http://www.fftw.org/doc/Complex-numbers.html
 	freq_view = new fftwblitz::cplx2d(
 		reinterpret_cast<std::complex<double> *>(freq), 
-		blitz::shape(size_y, (size_x/2+1)), blitz::neverDeleteData);
+		blitz::shape(size0, (size1/2+1)), blitz::neverDeleteData);
 }
 
 FFTW_C2R_2D::~FFTW_C2R_2D() {
@@ -100,29 +104,29 @@ void FFTW_C2R_2D::execute() {
 
 ///// FFTW_R2C_1D /////
 
-FFTW_R2C_1D::FFTW_R2C_1D(fftwblitz::shape1d size) {
-	init(size[0]);
+FFTW_R2C_1D::FFTW_R2C_1D(fftwblitz::shape1d size, unsigned int flags) {
+	init(size[0], flags);
 }
 
-FFTW_R2C_1D::FFTW_R2C_1D(int size) {
-	init(size);
+FFTW_R2C_1D::FFTW_R2C_1D(int size, unsigned int flags) {
+	init(size, flags);
 }
 
-void FFTW_R2C_1D::init(int size_x) {
+void FFTW_R2C_1D::init(int size, unsigned int flags) {
 	acquire_fftw_mutex();
-	spatial = (double *)fftw_malloc(sizeof(double) * size_x);
-	freq = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * (size_x/2+1));
-	plan = fftw_plan_dft_r2c_1d(size_x, spatial, freq, FFTW_ESTIMATE);
+	spatial = (double *)fftw_malloc(sizeof(double) * size);
+	freq = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * (size/2+1));
+	plan = fftw_plan_dft_r2c_1d(size, spatial, freq, flags);
 	release_fftw_mutex();
 
 	spatial_view = new fftwblitz::real1d(
-		spatial, blitz::shape(size_x), blitz::neverDeleteData);
+		spatial, blitz::shape(size), blitz::neverDeleteData);
 	// Supposedly std::complex is always compatible with fftw's 
 	// custom complex type (which is double[2])
 	// http://www.fftw.org/doc/Complex-numbers.html
 	freq_view = new fftwblitz::cplx1d(
 		reinterpret_cast<std::complex<double> *>(freq), 
-		blitz::shape(size_x/2+1), blitz::neverDeleteData);
+		blitz::shape(size/2+1), blitz::neverDeleteData);
 }
 
 FFTW_R2C_1D::~FFTW_R2C_1D() {
@@ -149,29 +153,29 @@ void FFTW_R2C_1D::execute() {
 
 ///// FFTW_C2R_1D /////
 
-FFTW_C2R_1D::FFTW_C2R_1D(fftwblitz::shape1d size) {
-	init(size[0]);
+FFTW_C2R_1D::FFTW_C2R_1D(fftwblitz::shape1d size, unsigned int flags) {
+	init(size[0], flags);
 }
 
-FFTW_C2R_1D::FFTW_C2R_1D(int size) {
-	init(size);
+FFTW_C2R_1D::FFTW_C2R_1D(int size, unsigned int flags) {
+	init(size, flags);
 }
 
-void FFTW_C2R_1D::init(int size_x) {
+void FFTW_C2R_1D::init(int size, unsigned int flags) {
 	acquire_fftw_mutex();
-	spatial = (double *)fftw_malloc(sizeof(double) * size_x);
-	freq = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * (size_x/2+1));
-	plan = fftw_plan_dft_c2r_1d(size_x, freq, spatial, FFTW_ESTIMATE);
+	spatial = (double *)fftw_malloc(sizeof(double) * size);
+	freq = (fftw_complex *)fftw_malloc(sizeof(fftw_complex) * (size/2+1));
+	plan = fftw_plan_dft_c2r_1d(size, freq, spatial, flags);
 	release_fftw_mutex();
 
 	spatial_view = new fftwblitz::real1d(
-		spatial, blitz::shape(size_x), blitz::neverDeleteData);
+		spatial, blitz::shape(size), blitz::neverDeleteData);
 	// Supposedly std::complex is always compatible with fftw's 
 	// custom complex type (which is double[2])
 	// http://www.fftw.org/doc/Complex-numbers.html
 	freq_view = new fftwblitz::cplx1d(
 		reinterpret_cast<std::complex<double> *>(freq), 
-		blitz::shape(size_x/2+1), blitz::neverDeleteData);
+		blitz::shape(size/2+1), blitz::neverDeleteData);
 }
 
 FFTW_C2R_1D::~FFTW_C2R_1D() {

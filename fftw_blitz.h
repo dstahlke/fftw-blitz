@@ -26,11 +26,11 @@ class FFTW_R2C_2D : public boost::noncopyable {
 	fftwblitz::real2d *spatial_view;
 	fftwblitz::cplx2d *freq_view;
 
-	void init(int size_y, int size_x, unsigned int flags);
+	void init(int size0, int size1, unsigned int flags);
 
 public:
 	FFTW_R2C_2D(fftwblitz::shape2d size, unsigned int flags=FFTW_ESTIMATE);
-	FFTW_R2C_2D(int size_y, int size_x, unsigned int flags=FFTW_ESTIMATE);
+	FFTW_R2C_2D(int size0, int size1, unsigned int flags=FFTW_ESTIMATE);
 
 	~FFTW_R2C_2D();
 
@@ -55,11 +55,11 @@ class FFTW_C2R_2D : public boost::noncopyable {
 	fftwblitz::real2d *spatial_view;
 	fftwblitz::cplx2d *freq_view;
 
-	void init(int size_y, int size_x);
+	void init(int size0, int size1, unsigned int flags);
 
 public:
-	FFTW_C2R_2D(fftwblitz::shape2d size);
-	FFTW_C2R_2D(int size_y, int size_x);
+	FFTW_C2R_2D(fftwblitz::shape2d size, unsigned int flags=FFTW_ESTIMATE);
+	FFTW_C2R_2D(int size0, int size1, unsigned int flags=FFTW_ESTIMATE);
 
 	~FFTW_C2R_2D();
 
@@ -84,11 +84,11 @@ class FFTW_R2C_1D : public boost::noncopyable {
 	fftwblitz::real1d *spatial_view;
 	fftwblitz::cplx1d *freq_view;
 
-	void init(int size_x);
+	void init(int size, unsigned int flags);
 
 public:
-	FFTW_R2C_1D(fftwblitz::shape1d size);
-	FFTW_R2C_1D(int size_x);
+	FFTW_R2C_1D(fftwblitz::shape1d size, unsigned int flags=FFTW_ESTIMATE);
+	FFTW_R2C_1D(int size, unsigned int flags=FFTW_ESTIMATE);
 
 	~FFTW_R2C_1D();
 
@@ -113,11 +113,11 @@ class FFTW_C2R_1D : public boost::noncopyable {
 	fftwblitz::real1d *spatial_view;
 	fftwblitz::cplx1d *freq_view;
 
-	void init(int size_x);
+	void init(int size, unsigned int flags);
 
 public:
-	FFTW_C2R_1D(fftwblitz::shape1d size);
-	FFTW_C2R_1D(int size_x);
+	FFTW_C2R_1D(fftwblitz::shape1d size, unsigned int flags=FFTW_ESTIMATE);
+	FFTW_C2R_1D(int size, unsigned int flags=FFTW_ESTIMATE);
 
 	~FFTW_C2R_1D();
 
