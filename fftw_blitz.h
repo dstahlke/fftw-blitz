@@ -17,6 +17,11 @@
 	#define LOCK_FFTW_ALLOC_MUTEX() do{}while(0)
 #endif
 
+// Supposedly std::complex is always compatible with fftw's 
+// custom complex type (which is double[2])
+// http://www.fftw.org/doc/Complex-numbers.html
+#define FFTW_CAST_COMPLEX(arr) reinterpret_cast<fftw_complex *>(arr)
+
 template <class T>
 class FFTW_Memblock : public boost::noncopyable {
 public:
@@ -34,13 +39,13 @@ public:
 	T *ptr;
 };
 
-template <int N>
-class FFTW_Blitz_Real : public boost::noncopyable {
+template <class T, int N>
+class FFTW_Blitz: public boost::noncopyable {
 public:
-	FFTW_Memblock<double> fftw_mem;
-	blitz::Array<double, N> blitz_array;
+	FFTW_Memblock<T> fftw_mem;
+	blitz::Array<T, N> blitz_array;
 
-	FFTW_Blitz_Real(blitz::TinyVector<int, N> shape) :
+	FFTW_Blitz(blitz::TinyVector<int, N> shape) :
 		fftw_mem(product(shape)),
 		blitz_array(
 			fftw_mem.ptr, shape, 
@@ -48,33 +53,15 @@ public:
 	{ }
 };
 
-template <int N>
-class FFTW_Blitz_Cplx : public boost::noncopyable {
-public:
-	FFTW_Memblock<fftw_complex> fftw_mem;
-	blitz::Array<std::complex<double>, N> blitz_array;
-
-	FFTW_Blitz_Cplx(blitz::TinyVector<int, N> shape) :
-		fftw_mem(product(shape)),
-		// Supposedly std::complex is always compatible with fftw's 
-		// custom complex type (which is double[2])
-		// http://www.fftw.org/doc/Complex-numbers.html
-		blitz_array(
-			reinterpret_cast<std::complex<double> *>(fftw_mem.ptr), 
-			shape, 
-			blitz::neverDeleteData)
-	{ }
-};
-
-template <int DIM, class INBUF, class INRET, class OUTBUF, class OUTRET>
+template <int DIM, class T_IN, class T_OUT>
 class FFTW_Base : public boost::noncopyable {
 	friend class FFTW_R2C_2D;
 	friend class FFTW_C2R_2D;
 	friend class FFTW_R2C_1D;
 	friend class FFTW_C2R_1D;
 
-	INBUF in;
-	OUTBUF out;
+	FFTW_Blitz<T_IN, DIM> in;
+	FFTW_Blitz<T_OUT, DIM> out;
 	fftw_plan plan;
 
 	FFTW_Base(
@@ -90,22 +77,19 @@ class FFTW_Base : public boost::noncopyable {
 	}
 
 public:
-	inline INRET &input() { return in.blitz_array; }
-	inline OUTRET &output() { return out.blitz_array; }
+	inline blitz::Array<T_IN, DIM> &input() { return in.blitz_array; }
+	inline blitz::Array<T_OUT, DIM> &output() { return out.blitz_array; }
 	inline void execute() { fftw_execute(plan); }
 
 	template <class T> // template here allows usage of blitz expressions
-	inline OUTRET execute(T in) {
+	inline blitz::Array<T_OUT, DIM> execute(T in) {
 		input() = in;
 		execute();
 		return output();
 	}
 };
 
-typedef FFTW_Base<2, 
-	FFTW_Blitz_Real<2>, blitz::Array<double, 2>,
-	FFTW_Blitz_Cplx<2>, blitz::Array<std::complex<double>, 2>
-	> FFTW_R2C_2D_Base;
+typedef FFTW_Base<2, double, std::complex<double> > FFTW_R2C_2D_Base;
 
 class FFTW_R2C_2D : public FFTW_R2C_2D_Base {
 public:
@@ -118,15 +102,13 @@ public:
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_2d(
 			size0, size1, 
-			in.fftw_mem.ptr, out.fftw_mem.ptr, 
+			in.fftw_mem.ptr, 
+			FFTW_CAST_COMPLEX(out.fftw_mem.ptr), 
 			flags);
 	}
 };
 
-typedef FFTW_Base<2, 
-	FFTW_Blitz_Cplx<2>, blitz::Array<std::complex<double>, 2>,
-	FFTW_Blitz_Real<2>, blitz::Array<double, 2>
-	> FFTW_C2R_2D_Base;
+typedef FFTW_Base<2, std::complex<double>, double > FFTW_C2R_2D_Base;
 
 class FFTW_C2R_2D : public FFTW_C2R_2D_Base {
 public:
@@ -139,15 +121,13 @@ public:
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_c2r_2d(
 			size0, size1, 
-			in.fftw_mem.ptr, out.fftw_mem.ptr, 
+			FFTW_CAST_COMPLEX(in.fftw_mem.ptr), 
+			out.fftw_mem.ptr, 
 			flags);
 	}
 };
 
-typedef FFTW_Base<1, 
-	FFTW_Blitz_Real<1>, blitz::Array<double, 1>,
-	FFTW_Blitz_Cplx<1>, blitz::Array<std::complex<double>, 1>
-	> FFTW_R2C_1D_Base;
+typedef FFTW_Base<1, double, std::complex<double> > FFTW_R2C_1D_Base;
 
 class FFTW_R2C_1D : public FFTW_R2C_1D_Base {
 public:
@@ -160,15 +140,13 @@ public:
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_1d(
 			size, 
-			in.fftw_mem.ptr, out.fftw_mem.ptr, 
+			in.fftw_mem.ptr, 
+			FFTW_CAST_COMPLEX(out.fftw_mem.ptr), 
 			flags);
 	}
 };
 
-typedef FFTW_Base<1, 
-	FFTW_Blitz_Cplx<1>, blitz::Array<std::complex<double>, 1>,
-	FFTW_Blitz_Real<1>, blitz::Array<double, 1>
-	> FFTW_C2R_1D_Base;
+typedef FFTW_Base<1, std::complex<double>, double > FFTW_C2R_1D_Base;
 
 class FFTW_C2R_1D : public FFTW_C2R_1D_Base {
 public:
@@ -181,7 +159,8 @@ public:
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_c2r_1d(
 			size, 
-			in.fftw_mem.ptr, out.fftw_mem.ptr, 
+			FFTW_CAST_COMPLEX(in.fftw_mem.ptr), 
+			out.fftw_mem.ptr, 
 			flags);
 	}
 };
