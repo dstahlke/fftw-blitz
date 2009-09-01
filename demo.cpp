@@ -24,8 +24,8 @@ void test_1d() {
 void test_2d() {
 	int size_y=10, size_x=8;
 	blitz::Array<double, 2>  in(size_y, size_x);
-	FFTW_R2C_2D fwd(in.shape());
-	FFTW_C2R_2D inv(in.shape());
+	FFTW_R2C_2D fwd(size_y, size_x);
+	FFTW_C2R_2D inv(size_y, size_x);
 
 	blitz::firstIndex i;
 	blitz::secondIndex j;
