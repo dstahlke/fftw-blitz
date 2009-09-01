@@ -22,6 +22,8 @@
 // http://www.fftw.org/doc/Complex-numbers.html
 #define FFTW_CAST_COMPLEX(arr) reinterpret_cast<fftw_complex *>(arr)
 
+// This cannot simply be inlined into FFTW_Blitz_Adaptor because we need to
+// lock the mutex before construction of the array
 template <class T>
 class FFTW_Memblock : public boost::noncopyable {
 public:
@@ -40,12 +42,12 @@ public:
 };
 
 template <class T, int N>
-class FFTW_Blitz: public boost::noncopyable {
+class FFTW_Blitz_Adaptor: public boost::noncopyable {
 public:
 	FFTW_Memblock<T> fftw_mem;
 	blitz::Array<T, N> blitz_array;
 
-	FFTW_Blitz(blitz::TinyVector<int, N> shape) :
+	FFTW_Blitz_Adaptor(blitz::TinyVector<int, N> shape) :
 		fftw_mem(product(shape)),
 		blitz_array(
 			fftw_mem.ptr, shape, 
@@ -60,8 +62,8 @@ class FFTW_Base : public boost::noncopyable {
 	friend class FFTW_R2C_1D;
 	friend class FFTW_C2R_1D;
 
-	FFTW_Blitz<T_IN, DIM> in;
-	FFTW_Blitz<T_OUT, DIM> out;
+	FFTW_Blitz_Adaptor<T_IN, DIM> in;
+	FFTW_Blitz_Adaptor<T_OUT, DIM> out;
 	fftw_plan plan;
 
 	FFTW_Base(
