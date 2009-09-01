@@ -12,12 +12,12 @@ void test_1d() {
 		+ 20.0*sin(i / double(size) * 2.0 * M_PI * 3.0)
 		+ 30.0*cos(i / double(size) * 2.0 * M_PI * 4.0);
 	blitz::Array<std::complex<double>, 1> out(fwd.output().shape());
-	out = fwd.forward(in) / double(size);
+	out = fwd.execute(in) / double(size);
 	out = where(real(out*conj(out)) > 1e-9, out, 0);
 	std::cout << out << std::endl;
 
 	blitz::Array<double, 1> err(size);
-	err = in*size - inv.inverse(fwd.forward(in));
+	err = in*size - inv.execute(fwd.execute(in));
 	std::cout << "err=" << max(fabs(err)) << std::endl;
 }
 
