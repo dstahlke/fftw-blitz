@@ -79,15 +79,52 @@ public:
 	{ }
 };
 
-class FFTW_R2C_2D : public boost::noncopyable {
-	FFTW_Blitz_Real<2> in;
-	FFTW_Blitz_Cplx<2> out;
+template <int DIM, class INBUF, class INRET, class OUTBUF, class OUTRET>
+class FFTW_Base : public boost::noncopyable {
+	friend class FFTW_R2C_2D;
+	friend class FFTW_C2R_2D;
+
+	INBUF in;
+	OUTBUF out;
 	fftw_plan plan;
 
+	FFTW_Base(
+		blitz::TinyVector<int, DIM> in_shape,
+		blitz::TinyVector<int, DIM> out_shape
+	) :
+		in(in_shape), out(out_shape), plan(0)
+	{ }
+
+	~FFTW_Base() {
+		LOCK_FFTW_ALLOC_MUTEX();
+		fftw_destroy_plan(plan);
+	}
+
+public:
+	inline INRET &input() { return in.blitz_array; }
+	inline OUTRET &output() { return out.blitz_array; }
+	inline void execute() { fftw_execute(plan); }
+
+	template <class T> // template here allows usage of blitz expressions
+	inline OUTRET execute(T in) {
+		input() = in;
+		execute();
+		return output();
+	}
+};
+
+typedef FFTW_Base<2, 
+	FFTW_Blitz_Real<2>, fftwblitz::real2d,
+	FFTW_Blitz_Cplx<2>, fftwblitz::cplx2d
+	> FFTW_R2C_2D_Base;
+
+class FFTW_R2C_2D : public FFTW_R2C_2D_Base {
 public:
 	FFTW_R2C_2D(int size0, int size1, unsigned int flags=FFTW_ESTIMATE) :
-		in(blitz::shape(size0, size1)),
-		out(blitz::shape(size0, (size1/2+1)))
+		FFTW_R2C_2D_Base(
+			blitz::shape(size0, size1),
+			blitz::shape(size0, (size1/2+1))
+		)
 	{
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_2d(
@@ -95,53 +132,26 @@ public:
 			in.fftw_mem.ptr, out.fftw_mem.ptr, 
 			flags);
 	}
-
-	~FFTW_R2C_2D() {
-		LOCK_FFTW_ALLOC_MUTEX();
-		fftw_destroy_plan(plan);
-	}
-
-	inline fftwblitz::real2d &input() { return in.blitz_array; }
-	inline fftwblitz::cplx2d &output() { return out.blitz_array; }
-
-	void execute() {
-		fftw_execute(plan); 
-	}
-
-	template <class T> // template here allows usage of blitz expressions
-	inline fftwblitz::cplx2d forward(T in) {
-		input() = in;
-		execute();
-		return output();
-	}
 };
 
-class FFTW_C2R_2D : public boost::noncopyable {
-	double *spatial;
-	fftw_complex *freq;
-	fftw_plan plan;
-	// these are pointers so we can construct them in the
-	// body of our constructor
-	fftwblitz::real2d *spatial_view;
-	fftwblitz::cplx2d *freq_view;
+typedef FFTW_Base<2, 
+	FFTW_Blitz_Cplx<2>, fftwblitz::cplx2d,
+	FFTW_Blitz_Real<2>, fftwblitz::real2d
+	> FFTW_C2R_2D_Base;
 
-	void init(int size0, int size1, unsigned int flags);
-
+class FFTW_C2R_2D : public FFTW_C2R_2D_Base {
 public:
-	FFTW_C2R_2D(fftwblitz::shape2d size, unsigned int flags=FFTW_ESTIMATE);
-	FFTW_C2R_2D(int size0, int size1, unsigned int flags=FFTW_ESTIMATE);
-
-	~FFTW_C2R_2D();
-
-	fftwblitz::cplx2d &input();
-	fftwblitz::real2d &output();
-	void execute();
-
-	template <class T> // template here allows usage of blitz expressions
-	inline fftwblitz::real2d inverse(T in) {
-		input() = in;
-		execute();
-		return output();
+	FFTW_C2R_2D(int size0, int size1, unsigned int flags=FFTW_ESTIMATE) :
+		FFTW_C2R_2D_Base(
+			blitz::shape(size0, (size1/2+1)),
+			blitz::shape(size0, size1)
+		)
+	{
+		LOCK_FFTW_ALLOC_MUTEX();
+		plan = fftw_plan_dft_c2r_2d(
+			size0, size1, 
+			in.fftw_mem.ptr, out.fftw_mem.ptr, 
+			flags);
 	}
 };
 
