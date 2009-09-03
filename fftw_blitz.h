@@ -6,7 +6,7 @@
 #include <blitz/tinyvec-et.h>
 #include <boost/utility.hpp>
 
-#if FFTWBLITZ_MT
+#if _REENTRANT
 	#include <boost/thread/mutex.hpp>
 	// FFTW's memory allocation is not thread-safe
 	// http://www.fftw.org/fftw3_doc/Thread-safety.html
@@ -101,6 +101,20 @@ public:
 			blitz::shape(size0, (size1/2+1))
 		)
 	{
+		init(size0, size1, flags);
+	}
+
+	FFTW_R2C_2D(blitz::TinyVector<int, 2> size, unsigned int flags=FFTW_ESTIMATE) :
+		FFTW_R2C_2D_Base(
+			blitz::shape(size[0], size[1]),
+			blitz::shape(size[0], (size[1]/2+1))
+		)
+	{
+		init(size[0], size[1], flags);
+	}
+
+private:
+	void init(int size0, int size1, unsigned int flags) {
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_2d(
 			size0, size1, 
@@ -120,6 +134,20 @@ public:
 			blitz::shape(size0, size1)
 		)
 	{
+		init(size0, size1, flags);
+	}
+
+	FFTW_C2R_2D(blitz::TinyVector<int, 2> size, unsigned int flags=FFTW_ESTIMATE) :
+		FFTW_C2R_2D_Base(
+			blitz::shape(size[0], (size[1]/2+1)),
+			blitz::shape(size[0], size[1])
+		)
+	{
+		init(size[0], size[1], flags);
+	}
+
+private:
+	void init(int size0, int size1, unsigned int flags) {
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_c2r_2d(
 			size0, size1, 
