@@ -57,11 +57,7 @@ public:
 
 template <int DIM, class T_IN, class T_OUT>
 class FFTW_Base : public boost::noncopyable {
-	friend class FFTW_R2C_2D;
-	friend class FFTW_C2R_2D;
-	friend class FFTW_R2C_1D;
-	friend class FFTW_C2R_1D;
-
+protected:
 	FFTW_Blitz_Adaptor<T_IN, DIM> in;
 	FFTW_Blitz_Adaptor<T_OUT, DIM> out;
 	fftw_plan plan;
