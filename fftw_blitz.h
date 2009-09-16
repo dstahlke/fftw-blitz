@@ -91,26 +91,44 @@ typedef FFTW_Base<2, double, std::complex<double> > FFTW_R2C_2D_Base;
 
 class FFTW_R2C_2D : public FFTW_R2C_2D_Base {
 public:
-	FFTW_R2C_2D(int size0, int size1, unsigned int flags=FFTW_ESTIMATE) :
+	FFTW_R2C_2D(int _size0, int _size1, unsigned int _flags=FFTW_ESTIMATE) :
 		FFTW_R2C_2D_Base(
-			blitz::shape(size0, size1),
-			blitz::shape(size0, (size1/2+1))
-		)
+			blitz::shape(_size0, _size1),
+			blitz::shape(_size0, (_size1/2+1))
+		),
+		size0(_size0),
+		size1(_size1),
+		flags(_flags)
 	{
-		init(size0, size1, flags);
+		init();
 	}
 
-	FFTW_R2C_2D(blitz::TinyVector<int, 2> size, unsigned int flags=FFTW_ESTIMATE) :
+	FFTW_R2C_2D(blitz::TinyVector<int, 2> _size, unsigned int _flags=FFTW_ESTIMATE) :
 		FFTW_R2C_2D_Base(
-			blitz::shape(size[0], size[1]),
-			blitz::shape(size[0], (size[1]/2+1))
-		)
+			blitz::shape(_size[0], _size[1]),
+			blitz::shape(_size[0], (_size[1]/2+1))
+		),
+		size0(_size[0]),
+		size1(_size[1]),
+		flags(_flags)
 	{
-		init(size[0], size[1], flags);
+		init();
 	}
+
+//	FFTW_R2C_2D(FFTW_R2C_2D &o) :
+//		FFTW_R2C_2D_Base(
+//			blitz::shape(o.size0, o.size1),
+//			blitz::shape(o.size0, (o.size1/2+1))
+//		),
+//		size0(o.size0),
+//		size1(o.size1),
+//		flags(o.flags)
+//	{
+//		init();
+//	}
 
 private:
-	void init(int size0, int size1, unsigned int flags) {
+	void init() {
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_2d(
 			size0, size1, 
@@ -118,32 +136,54 @@ private:
 			FFTW_CAST_COMPLEX(out.fftw_mem.ptr), 
 			flags);
 	}
+
+	int size0;
+	int size1;
+	unsigned int flags;
 };
 
 typedef FFTW_Base<2, std::complex<double>, double > FFTW_C2R_2D_Base;
 
 class FFTW_C2R_2D : public FFTW_C2R_2D_Base {
 public:
-	FFTW_C2R_2D(int size0, int size1, unsigned int flags=FFTW_ESTIMATE) :
+	FFTW_C2R_2D(int _size0, int _size1, unsigned int _flags=FFTW_ESTIMATE) :
 		FFTW_C2R_2D_Base(
-			blitz::shape(size0, (size1/2+1)),
-			blitz::shape(size0, size1)
-		)
+			blitz::shape(_size0, (_size1/2+1)),
+			blitz::shape(_size0, _size1)
+		),
+		size0(_size0),
+		size1(_size1),
+		flags(_flags)
 	{
-		init(size0, size1, flags);
+		init();
 	}
 
-	FFTW_C2R_2D(blitz::TinyVector<int, 2> size, unsigned int flags=FFTW_ESTIMATE) :
+	FFTW_C2R_2D(blitz::TinyVector<int, 2> _size, unsigned int _flags=FFTW_ESTIMATE) :
 		FFTW_C2R_2D_Base(
-			blitz::shape(size[0], (size[1]/2+1)),
-			blitz::shape(size[0], size[1])
-		)
+			blitz::shape(_size[0], (_size[1]/2+1)),
+			blitz::shape(_size[0], _size[1])
+		),
+		size0(_size[0]),
+		size1(_size[1]),
+		flags(_flags)
 	{
-		init(size[0], size[1], flags);
+		init();
 	}
+
+//	FFTW_C2R_2D(FFTW_C2R_2D &o) :
+//		FFTW_C2R_2D_Base(
+//			blitz::shape(o.size0, (o.size1/2+1)),
+//			blitz::shape(o.size0, o.size1)
+//		),
+//		size0(o.size0),
+//		size1(o.size1),
+//		flags(o.flags)
+//	{
+//		init();
+//	}
 
 private:
-	void init(int size0, int size1, unsigned int flags) {
+	void init() {
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_c2r_2d(
 			size0, size1, 
@@ -151,6 +191,10 @@ private:
 			out.fftw_mem.ptr, 
 			flags);
 	}
+
+	int size0;
+	int size1;
+	unsigned int flags;
 };
 
 typedef FFTW_Base<1, double, std::complex<double> > FFTW_R2C_1D_Base;
