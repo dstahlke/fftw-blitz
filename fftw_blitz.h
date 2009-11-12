@@ -58,30 +58,44 @@ public:
 template <int DIM, class T_IN, class T_OUT>
 class FFTW_Base : public boost::noncopyable {
 protected:
-	FFTW_Blitz_Adaptor<T_IN, DIM> in;
-	FFTW_Blitz_Adaptor<T_OUT, DIM> out;
+	typedef boost::shared_ptr<FFTW_Blitz_Adaptor<T_IN,  DIM> > in_mem_type;
+	typedef boost::shared_ptr<FFTW_Blitz_Adaptor<T_OUT, DIM> > out_mem_type;
+
+	in_mem_type in;
+	out_mem_type out;
 	fftw_plan plan;
 
 	FFTW_Base(
 		blitz::TinyVector<int, DIM> in_shape,
 		blitz::TinyVector<int, DIM> out_shape
 	) :
-		in(in_shape), out(out_shape), plan(0)
+		in (new FFTW_Blitz_Adaptor<T_IN,  DIM>( in_shape)), 
+		out(new FFTW_Blitz_Adaptor<T_OUT, DIM>(out_shape)), 
+		plan(NULL)
+	{ }
+
+	FFTW_Base(
+		in_mem_type _in,
+		out_mem_type _out
+	) :
+		in (_in), 
+		out(_out), 
+		plan(NULL)
 	{ }
 
 	~FFTW_Base() {
 		LOCK_FFTW_ALLOC_MUTEX();
-		fftw_destroy_plan(plan);
+		if(plan) fftw_destroy_plan(plan);
 	}
 
 public:
-	inline blitz::Array<T_IN, DIM> &input() { return in.blitz_array; }
-	inline blitz::Array<T_OUT, DIM> &output() { return out.blitz_array; }
+	inline blitz::Array<T_IN,  DIM> & input() { return in->blitz_array; }
+	inline blitz::Array<T_OUT, DIM> &output() { return out->blitz_array; }
 	inline void execute() { fftw_execute(plan); }
 
 	template <class T> // template here allows usage of blitz expressions
-	inline blitz::Array<T_OUT, DIM> execute(T in) {
-		input() = in;
+	inline blitz::Array<T_OUT, DIM> execute(T data) {
+		input() = data;
 		execute();
 		return output();
 	}
@@ -90,6 +104,7 @@ public:
 typedef FFTW_Base<2, double, std::complex<double> > FFTW_R2C_2D_Base;
 
 class FFTW_R2C_2D : public FFTW_R2C_2D_Base {
+	friend class FFTW_C2R_2D;
 public:
 	FFTW_R2C_2D(int _size0, int _size1, unsigned int _flags=FFTW_ESTIMATE) :
 		FFTW_R2C_2D_Base(
@@ -115,36 +130,44 @@ public:
 		init();
 	}
 
-//	FFTW_R2C_2D(FFTW_R2C_2D &o) :
-//		FFTW_R2C_2D_Base(
-//			blitz::shape(o.size0, o.size1),
-//			blitz::shape(o.size0, (o.size1/2+1))
-//		),
-//		size0(o.size0),
-//		size1(o.size1),
-//		flags(o.flags)
-//	{
-//		init();
-//	}
+	FFTW_R2C_2D(
+		in_mem_type _in,
+		out_mem_type _out,
+		unsigned int _flags=FFTW_ESTIMATE
+	) :
+		FFTW_R2C_2D_Base(_in, _out),
+		size0(_in->blitz_array.shape()[0]),
+		size1(_in->blitz_array.shape()[1]),
+		flags(_flags)
+	{
+		init();
+	}
+
+	~FFTW_R2C_2D();
+
+	void executeInverse();
 
 private:
 	void init() {
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_2d(
 			size0, size1, 
-			in.fftw_mem.ptr, 
-			FFTW_CAST_COMPLEX(out.fftw_mem.ptr), 
+			in->fftw_mem.ptr, 
+			FFTW_CAST_COMPLEX(out->fftw_mem.ptr), 
 			flags);
+		inverse = NULL;
 	}
 
 	int size0;
 	int size1;
 	unsigned int flags;
+	class FFTW_C2R_2D *inverse;
 };
 
 typedef FFTW_Base<2, std::complex<double>, double > FFTW_C2R_2D_Base;
 
 class FFTW_C2R_2D : public FFTW_C2R_2D_Base {
+	friend class FFTW_R2C_2D;
 public:
 	FFTW_C2R_2D(int _size0, int _size1, unsigned int _flags=FFTW_ESTIMATE) :
 		FFTW_C2R_2D_Base(
@@ -170,25 +193,27 @@ public:
 		init();
 	}
 
-//	FFTW_C2R_2D(FFTW_C2R_2D &o) :
-//		FFTW_C2R_2D_Base(
-//			blitz::shape(o.size0, (o.size1/2+1)),
-//			blitz::shape(o.size0, o.size1)
-//		),
-//		size0(o.size0),
-//		size1(o.size1),
-//		flags(o.flags)
-//	{
-//		init();
-//	}
-
 private:
+	// Create instance that shares memory with another instance.  Used by
+	// FFTW_R2C_2D.executeInverse().
+	FFTW_C2R_2D(
+		const FFTW_R2C_2D &f,
+		unsigned int _flags=FFTW_ESTIMATE
+	) :
+		FFTW_C2R_2D_Base(f.out, f.in),
+		size0(f.in->blitz_array.shape()[0]),
+		size1(f.in->blitz_array.shape()[1]),
+		flags(_flags)
+	{
+		init();
+	}
+
 	void init() {
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_c2r_2d(
 			size0, size1, 
-			FFTW_CAST_COMPLEX(in.fftw_mem.ptr), 
-			out.fftw_mem.ptr, 
+			FFTW_CAST_COMPLEX(in->fftw_mem.ptr), 
+			out->fftw_mem.ptr, 
 			flags);
 	}
 
@@ -210,8 +235,8 @@ public:
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_1d(
 			size, 
-			in.fftw_mem.ptr, 
-			FFTW_CAST_COMPLEX(out.fftw_mem.ptr), 
+			in->fftw_mem.ptr, 
+			FFTW_CAST_COMPLEX(out->fftw_mem.ptr), 
 			flags);
 	}
 };
@@ -229,8 +254,8 @@ public:
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_c2r_1d(
 			size, 
-			FFTW_CAST_COMPLEX(in.fftw_mem.ptr), 
-			out.fftw_mem.ptr, 
+			FFTW_CAST_COMPLEX(in->fftw_mem.ptr), 
+			out->fftw_mem.ptr, 
 			flags);
 	}
 };
