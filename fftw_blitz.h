@@ -33,7 +33,7 @@ public:
 			fftw_malloc(sizeof(T) * size));
 	}
 
-	~FFTW_Memblock() {
+	virtual ~FFTW_Memblock() {
 		LOCK_FFTW_ALLOC_MUTEX();
 		fftw_free(ptr);
 	}
@@ -83,7 +83,7 @@ protected:
 		plan(NULL)
 	{ }
 
-	~FFTW_Base() {
+	virtual ~FFTW_Base() {
 		LOCK_FFTW_ALLOC_MUTEX();
 		if(plan) fftw_destroy_plan(plan);
 	}
@@ -143,7 +143,7 @@ public:
 		init();
 	}
 
-	~FFTW_R2C_2D();
+	virtual ~FFTW_R2C_2D();
 
 	void executeInverse();
 
