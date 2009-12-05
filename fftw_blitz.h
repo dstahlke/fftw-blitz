@@ -5,6 +5,7 @@
 #include <blitz/array.h>
 #include <blitz/tinyvec-et.h>
 #include <boost/utility.hpp>
+#include <boost/shared_ptr.hpp>
 
 #if _REENTRANT
 	#include <boost/thread/mutex.hpp>
@@ -42,7 +43,7 @@ public:
 };
 
 template <class T, int N>
-class FFTW_Blitz_Adaptor: public boost::noncopyable {
+class FFTW_Blitz_Adaptor : public boost::noncopyable {
 public:
 	FFTW_Memblock<T> fftw_mem;
 	blitz::Array<T, N> blitz_array;
