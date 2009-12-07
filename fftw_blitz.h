@@ -4,8 +4,8 @@
 #include <fftw3.h>
 #include <blitz/array.h>
 #include <blitz/tinyvec-et.h>
-#include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
 
 #if _REENTRANT
 	#include <boost/thread/mutex.hpp>
@@ -28,7 +28,7 @@
 template <class T>
 class FFTW_Memblock : public boost::noncopyable {
 public:
-	FFTW_Memblock(size_t size) {
+	explicit FFTW_Memblock(size_t size) {
 		LOCK_FFTW_ALLOC_MUTEX();
 		ptr = reinterpret_cast<T *>(
 			fftw_malloc(sizeof(T) * size));
