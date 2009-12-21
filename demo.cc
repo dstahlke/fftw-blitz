@@ -22,7 +22,7 @@
 
 void test_1d() {
 	int size = 10;
-	blitz::Array<double, 1>  in(size);
+	blitz::Array<double, 1> in(size);
 	FFTW_R2C_1D fwd(size);
 	FFTW_C2R_1D inv(size);
 
@@ -42,7 +42,7 @@ void test_1d() {
 
 void test_2d() {
 	int size_y=10, size_x=8;
-	blitz::Array<double, 2>  in(size_y, size_x);
+	blitz::Array<double, 2> in(size_y, size_x);
 	FFTW_R2C_2D fwd(size_y, size_x);
 	FFTW_C2R_2D inv(size_y, size_x);
 
