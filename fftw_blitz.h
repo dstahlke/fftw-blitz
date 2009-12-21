@@ -133,7 +133,8 @@ public:
 		),
 		size0(_size0),
 		size1(_size1),
-		flags(_flags)
+		flags(_flags),
+		inverse(NULL)
 	{
 		init();
 	}
@@ -145,7 +146,8 @@ public:
 		),
 		size0(_size[0]),
 		size1(_size[1]),
-		flags(_flags)
+		flags(_flags),
+		inverse(NULL)
 	{
 		init();
 	}
@@ -158,7 +160,8 @@ public:
 		FFTW_R2C_2D_Base(_in, _out),
 		size0(_in->blitz_array.shape()[0]),
 		size1(_in->blitz_array.shape()[1]),
-		flags(_flags)
+		flags(_flags),
+		inverse(NULL)
 	{
 		init();
 	}
@@ -175,7 +178,6 @@ private:
 			in->fftw_mem.ptr, 
 			FFTW_CAST_COMPLEX(out->fftw_mem.ptr), 
 			flags);
-		inverse = NULL;
 	}
 
 	int size0;
