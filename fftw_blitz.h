@@ -186,13 +186,13 @@ public:
 		FFTW_R2C_2D_Base(
 			blitz::shape(_size0, _size1),
 			blitz::shape(_size0, (_size1/2+1))
-		),
-		size0(_size0),
-		size1(_size1),
-		flags(_flags),
-		inverse(NULL)
+		)
 	{
-		init();
+		init(
+			_size0,
+			_size1,
+			_flags
+		);
 	}
 
 	/** \param _size Size of input array
@@ -202,13 +202,13 @@ public:
 		FFTW_R2C_2D_Base(
 			blitz::shape(_size[0], _size[1]),
 			blitz::shape(_size[0], (_size[1]/2+1))
-		),
-		size0(_size[0]),
-		size1(_size[1]),
-		flags(_flags),
-		inverse(NULL)
+		)
 	{
-		init();
+		init(
+			_size[0],
+			_size[1],
+			_flags
+		);
 	}
 
 	/** \param _in Previously allocated input array
@@ -220,13 +220,13 @@ public:
 		out_mem_type _out,
 		unsigned int _flags=FFTW_ESTIMATE
 	) :
-		FFTW_R2C_2D_Base(_in, _out),
-		size0(_in->blitz_array.shape()[0]),
-		size1(_in->blitz_array.shape()[1]),
-		flags(_flags),
-		inverse(NULL)
+		FFTW_R2C_2D_Base(_in, _out)
 	{
-		init();
+		init(
+			_in->blitz_array.shape()[0],
+			_in->blitz_array.shape()[1],
+			_flags
+		);
 	}
 
 	virtual ~FFTW_R2C_2D();
@@ -237,7 +237,8 @@ public:
 	void executeInverse();
 
 private:
-	void init() {
+	void init(int size0, int size1, unsigned int flags) {
+		inverse = NULL;
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_2d(
 			size0, size1, 
@@ -246,9 +247,6 @@ private:
 			flags);
 	}
 
-	int size0;
-	int size1;
-	unsigned int flags;
 	/** \brief Lazily-constructed inverse transform */
 	class FFTW_C2R_2D *inverse;
 };
@@ -267,12 +265,13 @@ public:
 		FFTW_C2R_2D_Base(
 			blitz::shape(_size0, (_size1/2+1)),
 			blitz::shape(_size0, _size1)
-		),
-		size0(_size0),
-		size1(_size1),
-		flags(_flags)
+		)
 	{
-		init();
+		init(
+			_size0,
+			_size1,
+			_flags
+		);
 	}
 
 	/** \param _size Size of input array
@@ -282,12 +281,13 @@ public:
 		FFTW_C2R_2D_Base(
 			blitz::shape(_size[0], (_size[1]/2+1)),
 			blitz::shape(_size[0], _size[1])
-		),
-		size0(_size[0]),
-		size1(_size[1]),
-		flags(_flags)
+		)
 	{
-		init();
+		init(
+			_size[0],
+			_size[1],
+			_flags
+		);
 	}
 
 private:
@@ -299,15 +299,16 @@ private:
 		const FFTW_R2C_2D &f,
 		unsigned int _flags=FFTW_ESTIMATE
 	) :
-		FFTW_C2R_2D_Base(f.out, f.in),
-		size0(f.in->blitz_array.shape()[0]),
-		size1(f.in->blitz_array.shape()[1]),
-		flags(_flags)
+		FFTW_C2R_2D_Base(f.out, f.in)
 	{
-		init();
+		init(
+			f.in->blitz_array.shape()[0],
+			f.in->blitz_array.shape()[1],
+			_flags
+		);
 	}
 
-	void init() {
+	void init(int size0, int size1, unsigned int flags) {
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_c2r_2d(
 			size0, size1, 
@@ -315,10 +316,6 @@ private:
 			out->fftw_mem.ptr, 
 			flags);
 	}
-
-	int size0;
-	int size1;
-	unsigned int flags;
 };
 
 typedef FFTW_Base<1, double, std::complex<double> > FFTW_R2C_1D_Base;
@@ -326,8 +323,8 @@ typedef FFTW_Base<1, double, std::complex<double> > FFTW_R2C_1D_Base;
 /** \brief Adapter for 1-dimensional real-to-complex FFT */
 class FFTW_R2C_1D : public FFTW_R2C_1D_Base {
 public:
-	/** \param _size Size of input array
-	  * \param _flags Flags to pass to FFTW planner
+	/** \param size Size of input array
+	  * \param flags Flags to pass to FFTW planner
 	  */
 	FFTW_R2C_1D(int size, unsigned int flags=FFTW_ESTIMATE) :
 		FFTW_R2C_1D_Base(
@@ -349,8 +346,8 @@ typedef FFTW_Base<1, std::complex<double>, double > FFTW_C2R_1D_Base;
 /** \brief Adapter for 1-dimensional complex-to-real inverse FFT */
 class FFTW_C2R_1D : public FFTW_C2R_1D_Base {
 public:
-	/** \param _size Size of input array
-	  * \param _flags Flags to pass to FFTW planner
+	/** \param size Size of input array
+	  * \param flags Flags to pass to FFTW planner
 	  */
 	FFTW_C2R_1D(int size, unsigned int flags=FFTW_ESTIMATE) :
 		FFTW_C2R_1D_Base(
