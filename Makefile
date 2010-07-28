@@ -1,4 +1,4 @@
-#	Copyright 2009 Daniel Stahlke
+#	Copyright 2010 Daniel Stahlke
 #
 #	This file is part of fftw-blitz.
 #	
