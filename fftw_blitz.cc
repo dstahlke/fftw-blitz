@@ -20,6 +20,11 @@
 #include "fftw_blitz.h"
 
 #if _REENTRANT
+	/** \brief Mutex to ensure that there will be no simultaneous usage
+	 * of non-thread-safe FFTW functions.
+	 *
+	 * http://www.fftw.org/fftw3_doc/Thread-safety.html
+	 */
 	boost::mutex fftw_alloc_mutex;
 #endif
 
