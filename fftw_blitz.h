@@ -22,6 +22,8 @@
 
 /** \file fftw_blitz.h
  * \brief C++ wrapper for FFTW, using Blitz++ arrays.
+ *
+ * This file can be downloaded from http://www.stahlke.org/dan/fftw-blitz
  */
 
 #include <fftw3.h>

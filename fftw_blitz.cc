@@ -17,6 +17,12 @@
 	along with fftw-blitz.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/** \file fftw_blitz.cc
+ * \brief C++ wrapper for FFTW, using Blitz++ arrays.
+ *
+ * This file can be downloaded from http://www.stahlke.org/dan/fftw-blitz
+ */
+
 #include "fftw_blitz.h"
 
 #if _REENTRANT
