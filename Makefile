@@ -34,3 +34,6 @@ $(EXEC): $(OBJECTS)
 
 clean:
 	rm -f $(OBJECTS) $(EXEC)
+
+cppcheck:
+	cppcheck --template gcc --enable=all -q .
