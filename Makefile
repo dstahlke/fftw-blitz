@@ -36,4 +36,4 @@ clean:
 	rm -f $(OBJECTS) $(EXEC)
 
 cppcheck:
-	cppcheck --template gcc --enable=all -q .
+	cppcheck --template gcc --enable=all -q *.h .
