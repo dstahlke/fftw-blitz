@@ -28,7 +28,6 @@
 
 #include <fftw3.h>
 #include <blitz/array.h>
-#include <blitz/tinyvec-et.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
