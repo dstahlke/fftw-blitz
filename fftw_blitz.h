@@ -365,4 +365,29 @@ public:
 	}
 };
 
+typedef FFTW_Base<1, std::complex<double>, std::complex<double> > FFTW_1D_Base;
+
+/** \brief Adapter for 1-dimensional complex-to-real inverse FFT */
+class FFTW_1D : public FFTW_1D_Base {
+public:
+	/** \param size Size of input array
+	  * \param sign Forward (-1) or backward (+1) transform
+	  * \param flags Flags to pass to FFTW planner
+	  */
+	FFTW_1D(int size, int sign, unsigned int flags=FFTW_ESTIMATE) :
+		FFTW_1D_Base(
+			blitz::shape(size),
+			blitz::shape(size)
+		)
+	{
+		assert(sign==1 || sign==-1);
+		LOCK_FFTW_ALLOC_MUTEX();
+		plan = fftw_plan_dft_1d(
+			size, 
+			fftw_cast_complex(in->fftw_mem.ptr), 
+			fftw_cast_complex(out->fftw_mem.ptr), 
+			sign, flags);
+	}
+};
+
 #endif // FFTW_BLITZ_H
