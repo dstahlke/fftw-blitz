@@ -2,17 +2,17 @@
 	Copyright 2010 Daniel Stahlke
 
 	This file is part of fftw-blitz.
-	
+
 	fftw-blitz is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
 	the Free Software Foundation, either version 3 of the License, or
 	(at your option) any later version.
-	
+
 	fftw-blitz is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
-	
+
 	You should have received a copy of the GNU General Public License
 	along with fftw-blitz.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -46,7 +46,7 @@
 
 /** \brief Cast an array of std::complex to FFTW's complex type.
  *
- * Supposedly std::complex is always compatible with fftw's 
+ * Supposedly std::complex is always compatible with fftw's
  * custom complex type (which is double[2]).
  * http://www.fftw.org/doc/Complex-numbers.html
  */
@@ -92,7 +92,7 @@ public:
 	FFTW_Blitz_Adaptor(blitz::TinyVector<int, N> shape) :
 		fftw_mem(product(shape)),
 		blitz_array(
-			fftw_mem.ptr, shape, 
+			fftw_mem.ptr, shape,
 			blitz::neverDeleteData)
 	{ }
 
@@ -117,8 +117,8 @@ protected:
 		blitz::TinyVector<int, DIM> in_shape,
 		blitz::TinyVector<int, DIM> out_shape
 	) :
-		in (new FFTW_Blitz_Adaptor<T_IN,  DIM>( in_shape)), 
-		out(new FFTW_Blitz_Adaptor<T_OUT, DIM>(out_shape)), 
+		in (new FFTW_Blitz_Adaptor<T_IN,  DIM>( in_shape)),
+		out(new FFTW_Blitz_Adaptor<T_OUT, DIM>(out_shape)),
 		plan(NULL)
 	{ }
 
@@ -127,8 +127,8 @@ protected:
 		in_mem_type _in,
 		out_mem_type _out
 	) :
-		in (_in), 
-		out(_out), 
+		in (_in),
+		out(_out),
 		plan(NULL)
 	{ }
 
@@ -242,9 +242,9 @@ private:
 		inverse = NULL;
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_2d(
-			size0, size1, 
-			in->fftw_mem.ptr, 
-			fftw_cast_complex(out->fftw_mem.ptr), 
+			size0, size1,
+			in->fftw_mem.ptr,
+			fftw_cast_complex(out->fftw_mem.ptr),
 			flags);
 	}
 
@@ -312,9 +312,9 @@ private:
 	void init(int size0, int size1, unsigned int flags) {
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_c2r_2d(
-			size0, size1, 
-			fftw_cast_complex(in->fftw_mem.ptr), 
-			out->fftw_mem.ptr, 
+			size0, size1,
+			fftw_cast_complex(in->fftw_mem.ptr),
+			out->fftw_mem.ptr,
 			flags);
 	}
 };
@@ -335,9 +335,9 @@ public:
 	{
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_r2c_1d(
-			size, 
-			in->fftw_mem.ptr, 
-			fftw_cast_complex(out->fftw_mem.ptr), 
+			size,
+			in->fftw_mem.ptr,
+			fftw_cast_complex(out->fftw_mem.ptr),
 			flags);
 	}
 };
@@ -358,9 +358,9 @@ public:
 	{
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_c2r_1d(
-			size, 
-			fftw_cast_complex(in->fftw_mem.ptr), 
-			out->fftw_mem.ptr, 
+			size,
+			fftw_cast_complex(in->fftw_mem.ptr),
+			out->fftw_mem.ptr,
 			flags);
 	}
 };
@@ -383,9 +383,9 @@ public:
 		assert(sign==1 || sign==-1);
 		LOCK_FFTW_ALLOC_MUTEX();
 		plan = fftw_plan_dft_1d(
-			size, 
-			fftw_cast_complex(in->fftw_mem.ptr), 
-			fftw_cast_complex(out->fftw_mem.ptr), 
+			size,
+			fftw_cast_complex(in->fftw_mem.ptr),
+			fftw_cast_complex(out->fftw_mem.ptr),
 			sign, flags);
 	}
 };
